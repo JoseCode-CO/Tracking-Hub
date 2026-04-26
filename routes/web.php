@@ -1,32 +1,30 @@
 <?php
 
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Laravel\Fortify\Features;
-use Livewire\Volt\Volt;
 
 Route::get('/', function () {
-    return view('welcome');
+    return Inertia::render('welcome', [
+        'canRegister' => Features::enabled(Features::registration()),
+    ]);
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
-Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', 'settings/profile');
-
-    Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
-    Volt::route('settings/password', 'settings.password')->name('user-password.edit');
-    Volt::route('settings/appearance', 'settings.appearance')->name('appearance.edit');
-
-    Volt::route('settings/two-factor', 'settings.two-factor')
-        ->middleware(
-            when(
-                Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-                ['password.confirm'],
-                [],
-            ),
-        )
-        ->name('two-factor.show');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('dashboard', function () {
+        return Inertia::render('dashboard');
+    })->name('dashboard');
 });
+
+
+
+Route::get('products',[ProductController::class,'index'])->name('products.index');
+Route::get('products/create',[ProductController::class,'create'])->name('products.create');
+Route::post('products',[ProductController::class,'store'])->name('products.store');
+Route::get('products/{product}',[ProductController::class,'show'])->name('products.show');
+Route::get('products/{product}/edit',[ProductController::class,'edit'])->name('products.edit');
+Route::put('products/{product}',[ProductController::class,'update'])->name('products.update');
+Route::delete('products/{product}',[ProductController::class,'destroy'])->name('products.destroy');
+
+require __DIR__.'/settings.php';
